@@ -3,7 +3,8 @@
 	"package": "net.pneumono.gravestones.mixin",
 	"compatibilityLevel": "JAVA_17",
 	"mixins": [
-        "LivingEntityMixin"
+        "LivingEntityMixin",
+        "LivingEntitySlownessMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

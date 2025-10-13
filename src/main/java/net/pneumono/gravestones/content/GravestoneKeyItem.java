@@ -1,6 +1,8 @@
 package net.pneumono.gravestones.content;
 
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -140,6 +142,18 @@ public class GravestoneKeyItem extends Item {
                         double z = pos.getZ() + 0.5;
                         
                         serverPlayer.teleport(targetWorld, x, y, z, serverPlayer.getYaw(), serverPlayer.getPitch());
+                        
+                        // Apply positive effects after teleportation
+                        // Absorption X (40 HP / 20 hearts) - amplifier 9 = level 10
+                        serverPlayer.addStatusEffect(new StatusEffectInstance(StatusEffects.ABSORPTION, 500, 9)); // 25 seconds, level 10
+                        // Regeneration V
+                        serverPlayer.addStatusEffect(new StatusEffectInstance(StatusEffects.REGENERATION, 500, 7)); // 25 seconds, level 8
+                        // Resistance III - reduces damage by 60%
+                        serverPlayer.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, 500, 4)); // 25 seconds, level 5
+                        // Speed I - 20% movement speed boost
+                        serverPlayer.addStatusEffect(new StatusEffectInstance(StatusEffects.SPEED, 500, 1)); // 25 seconds, level 1
+                        // Jump Boost I - jump 0.5 blocks higher
+                        serverPlayer.addStatusEffect(new StatusEffectInstance(StatusEffects.JUMP_BOOST, 500, 0)); // 25 seconds, level 1
                         
                         // Spawn particles at arrival
                         for (int i = 0; i < 32; i++) {

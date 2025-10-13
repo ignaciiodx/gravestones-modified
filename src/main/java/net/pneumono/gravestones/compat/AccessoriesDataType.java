@@ -39,25 +39,63 @@ public class AccessoriesDataType extends GravestoneDataType {
             return;
         }
 
+        // Save regular accessories
         List<SlotReferencePrimitive> list = capability.getAllEquipped().stream()
                 .filter(reference -> !GravestonesApi.shouldSkipItem(player, reference.stack()))
-                .map(reference -> new SlotReferencePrimitive(reference.stack(), reference.reference()))
+                .map(reference -> new SlotReferencePrimitive(reference.stack(), reference.reference(), false))
                 .toList();
 
-        Gravestones.LOGGER.info("[DEBUG] Found {} accessories to save for player: {}", list.size(), player.getName().getString());
+        Gravestones.LOGGER.info("[DEBUG] Found {} regular accessories to save for player: {}", list.size(), player.getName().getString());
 
-        DataResult<NbtElement> result = SlotReferencePrimitive.CODEC.listOf().encodeStart(player.getRegistryManager().getOps(NbtOps.INSTANCE), list);
+        // Save cosmetic accessories
+        List<SlotReferencePrimitive> cosmeticList = new ArrayList<>();
+        for (var entry : capability.getContainers().entrySet()) {
+            String slotName = entry.getKey();
+            AccessoriesContainer container = entry.getValue();
+            ExpandedSimpleContainer cosmeticAccessories = container.getCosmeticAccessories();
+            
+            for (int i = 0; i < cosmeticAccessories.size(); i++) {
+                ItemStack stack = cosmeticAccessories.getStack(i);
+                if (!stack.isEmpty() && !GravestonesApi.shouldSkipItem(player, stack)) {
+                    cosmeticList.add(new SlotReferencePrimitive(stack, slotName, i, true));
+                    Gravestones.LOGGER.info("[DEBUG] Found cosmetic accessory: {} in slot {} index {}", stack.getItem().toString(), slotName, i);
+                }
+            }
+        }
+        
+        Gravestones.LOGGER.info("[DEBUG] Found {} cosmetic accessories to save for player: {}", cosmeticList.size(), player.getName().getString());
+
+        // Combine both lists
+        List<SlotReferencePrimitive> allAccessories = new ArrayList<>();
+        allAccessories.addAll(list);
+        allAccessories.addAll(cosmeticList);
+
+        DataResult<NbtElement> result = SlotReferencePrimitive.CODEC.listOf().encodeStart(player.getRegistryManager().getOps(NbtOps.INSTANCE), allAccessories);
         if (result.isSuccess()) {
             view.put("accessories", result.getOrThrow());
-            Gravestones.LOGGER.info("[DEBUG] Successfully saved {} accessories to NBT for player: {}", list.size(), player.getName().getString());
+            Gravestones.LOGGER.info("[DEBUG] Successfully saved {} total accessories (regular + cosmetic) to NBT for player: {}", allAccessories.size(), player.getName().getString());
             
             // Only remove items from player AFTER successfully saving to gravestone
             capability.getAllEquipped().stream()
                     .filter(reference -> !GravestonesApi.shouldSkipItem(player, reference.stack()))
                     .forEach(reference -> {
-                        Gravestones.LOGGER.info("[DEBUG] Removing accessory: {} from player: {}", reference.stack().getItem().toString(), player.getName().getString());
+                        Gravestones.LOGGER.info("[DEBUG] Removing regular accessory: {} from player: {}", reference.stack().getItem().toString(), player.getName().getString());
                         reference.reference().setStack(ItemStack.EMPTY);
                     });
+            
+            // Remove cosmetic accessories
+            for (var entry : capability.getContainers().entrySet()) {
+                AccessoriesContainer container = entry.getValue();
+                ExpandedSimpleContainer cosmeticAccessories = container.getCosmeticAccessories();
+                
+                for (int i = 0; i < cosmeticAccessories.size(); i++) {
+                    ItemStack stack = cosmeticAccessories.getStack(i);
+                    if (!stack.isEmpty() && !GravestonesApi.shouldSkipItem(player, stack)) {
+                        Gravestones.LOGGER.info("[DEBUG] Removing cosmetic accessory: {} from player: {}", stack.getItem().toString(), player.getName().getString());
+                        cosmeticAccessories.setStack(i, ItemStack.EMPTY);
+                    }
+                }
+            }
         } else {
             Gravestones.LOGGER.error("[DEBUG] Failed to save accessories for player: {}", player.getName().getString());
         }
@@ -85,6 +123,7 @@ public class AccessoriesDataType extends GravestoneDataType {
             ItemStack newStack = primitive.stack;
             if (newStack.isEmpty()) continue;
             int index = primitive.index;
+            boolean isCosmetic = primitive.isCosmetic;
 
             AccessoriesContainer container = capability.getContainers().get(primitive.slotName);
             if (container == null || container.getSize() <= 0) {
@@ -92,18 +131,29 @@ public class AccessoriesDataType extends GravestoneDataType {
                 continue;
             }
 
-            SlotReference slotReference = container.createReference(index);
-            if (!AccessoriesAPI.canInsertIntoSlot(newStack, slotReference)) {
-                remaining.add(newStack);
-                continue;
+            // Choose the correct inventory based on whether it's cosmetic
+            ExpandedSimpleContainer targetInventory = isCosmetic ? container.getCosmeticAccessories() : container.getAccessories();
+
+            // For regular accessories, check if the slot is valid
+            if (!isCosmetic) {
+                SlotReference slotReference = container.createReference(index);
+                if (!AccessoriesAPI.canInsertIntoSlot(newStack, slotReference)) {
+                    remaining.add(newStack);
+                    continue;
+                }
             }
 
-            ExpandedSimpleContainer accessories = container.getAccessories();
-
-            ItemStack oldStack = accessories.getStack(index);
+            ItemStack oldStack = targetInventory.getStack(index);
             if (oldStack.isEmpty()) {
                 // Slot is empty, we can insert the item directly
-                slotReference.setStack(newStack);
+                if (isCosmetic) {
+                    targetInventory.setStack(index, newStack);
+                    Gravestones.LOGGER.info("[DEBUG] Restored cosmetic accessory: {} to slot {} index {}", newStack.getItem().toString(), primitive.slotName, index);
+                } else {
+                    SlotReference slotReference = container.createReference(index);
+                    slotReference.setStack(newStack);
+                    Gravestones.LOGGER.info("[DEBUG] Restored regular accessory: {} to slot {} index {}", newStack.getItem().toString(), primitive.slotName, index);
+                }
             } else {
                 // Slot is occupied, add to remaining items to be dropped
                 remaining.add(newStack);
@@ -129,18 +179,20 @@ public class AccessoriesDataType extends GravestoneDataType {
                 .forEach(stack -> ItemScatterer.spawn(world, pos.getX(), pos.getY(), pos.getZ(), stack));
     }
 
-    public record SlotReferencePrimitive(ItemStack stack, String slotName, int index) {
+    public record SlotReferencePrimitive(ItemStack stack, String slotName, int index, boolean isCosmetic) {
         public static final Codec<SlotReferencePrimitive> CODEC = RecordCodecBuilder.create(instance -> instance.group(
                 ItemStack.CODEC.fieldOf("newStack").forGetter(SlotReferencePrimitive::stack),
                 Codec.STRING.fieldOf("slot_name").forGetter(SlotReferencePrimitive::slotName),
-                Codec.INT.fieldOf("index").forGetter(SlotReferencePrimitive::index)
+                Codec.INT.fieldOf("index").forGetter(SlotReferencePrimitive::index),
+                Codec.BOOL.optionalFieldOf("is_cosmetic", false).forGetter(SlotReferencePrimitive::isCosmetic)
         ).apply(instance, SlotReferencePrimitive::new));
 
-        public SlotReferencePrimitive(ItemStack stack, SlotReference reference) {
+        public SlotReferencePrimitive(ItemStack stack, SlotReference reference, boolean isCosmetic) {
             this(
                     stack,
                     reference.slotName(),
-                    reference.slot()
+                    reference.slot(),
+                    isCosmetic
             );
         }
     }

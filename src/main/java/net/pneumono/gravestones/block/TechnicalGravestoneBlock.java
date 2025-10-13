@@ -8,6 +8,7 @@ import net.minecraft.block.entity.BlockEntityTicker;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.component.type.ProfileComponent;
 import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
@@ -92,17 +93,29 @@ public class TechnicalGravestoneBlock extends AbstractGravestoneBlock {
         GravestonesApi.onCollect(world, pos, player, gravestone.getDecay(), gravestone.getContents());
         gravestone.setContents(new NbtCompound());
 
-        // Consume 4 hunger (2 hunger bars) if player has enough
-        if (player.getHungerManager().getFoodLevel() >= 4) {
-            player.getHungerManager().add(-4, 0.0F);
+        // Consume 1 hunger bar (1 muslito) if player has enough
+        if (player.getHungerManager().getFoodLevel() >= 2) {
+            player.getHungerManager().add(-2, 0.0F);
         } else {
-            // If player has less than 4, consume what they have
+            // If player has less than 2, consume what they have
             player.getHungerManager().setFoodLevel(0);
         }
+        
+        // Reset saturation to 0 when opening gravestone
+        player.getHungerManager().setSaturationLevel(0.0F);
 
-        // Apply Gravestone Curse effect when opening gravestone
-        // Amplifier 2 = -45% movement speed (Slowness III equivalent)
-        player.addStatusEffect(new StatusEffectInstance(GravestonesRegistry.GRAVESTONE_CURSE, 100, 2));
+
+
+        // Clear ALL status effects before applying the curse
+        player.clearStatusEffects();
+
+    // Apply all curse effects (5 seconds / 100 ticks)
+    // Hunger V (amplifier 4) para testeo visual
+    player.addStatusEffect(new StatusEffectInstance(StatusEffects.HUNGER, 200, 4)); // Level 5 (amplifier 4)
+    // Resistencia II (amplifier 1) para pruebas
+    player.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, 300, 1)); // Level 3 (amplifier 2)
+    // Gravestone Curse - custom effect for visual identification and blindness rendering
+    player.addStatusEffect(new StatusEffectInstance(GravestonesRegistry.GRAVESTONE_CURSE, 100, 0));
 
         player.incrementStat(GravestonesRegistry.GRAVESTONES_COLLECTED);
         MinecraftServer server = world.getServer();
