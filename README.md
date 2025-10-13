@@ -4,8 +4,6 @@
 > 
 > This is a modified version that adds a soulbound key system, complete gravestone history & recovery, and enhanced mod compatibility. All original features and credits belong to the original author Pneumono_.
 
-![A screenshot of a gravestone in front of a cliff. Written on the gravestone is the name Pneumono_, and the date and time of death.](images/gravestone.png)
-
 ## About This Version
 
 Soulbound Gravestones is an enhanced version of the original Gravestones mod that adds blocks which store your items on death. The original mod is a fairly standard grave mod, but with nicer, vanilla-style textures, extra config options to help tailor the mod to specific servers, and the option to use gravestones in builds.
@@ -23,7 +21,7 @@ Soulbound Gravestones is an enhanced version of the original Gravestones mod tha
 - **Blindness** effect (reduced visibility and fog) for 5 seconds
 - **Hunger Drain**: Consumes up to 4 hunger points (2 hunger bars)
 - The curse is represented by a single custom status effect with a key icon
-- Replicates vanilla blindness visuals perfectly without showing individual effect icons
+
 
 �📜 **Gravestone History & Recovery System**: Never lose your items to bugs or accidents again
 - Automatically stores your last 20 gravestones with all their data
@@ -36,7 +34,7 @@ Soulbound Gravestones is an enhanced version of the original Gravestones mod tha
 
 ⚙️ **Enhanced Configuration**:
 - Toggle gravestone key on/off
-- Adjust teleportation charge time (default: 1.6 seconds, like Waystones)
+- Adjust teleportation charge time
 - All original configuration options remain available
 
 ### Original Mod Features
@@ -48,7 +46,7 @@ Gravestone decay is very configurable and **all of its features can be configure
 
 By default, all gravestones decay over time and due to subsequent deaths. This is shown visually by a change in the block's texture.
 
-![A screenshot of a gravestone with large cracks and growths of moss. Written on the gravestone is the name Pneumono_, and the date and time of death.](images/decayed.png)
+
 
 After 3 stages of decay, the gravestone breaks entirely, spilling its contents onto the ground (after which the vanilla 5-minute despawn timer applies).
 
@@ -56,8 +54,6 @@ After 3 stages of decay, the gravestone breaks entirely, spilling its contents o
 Gravestones also includes craftable "aesthetic gravestones", which allow builders to use the gravestone blocks without having their builds at risk of damage.
 They can also be written on and dyed just like signs.
 
-![A screenshot of 3 aesthetic gravestones in a cherry grove surrounded by ruins. The grave on the left reads "R.I.P. Old Gravestone Model".
-The grave in the middle reads "R.I.P. Issue #3. You can finally type on these!". The grave on the right reads "YOU'RE NEXT", and is dyed red and glowing](images/aesthetic.png)
 
 ### Configs
 This is a short summary of some of the mod's configs. For the full list with more detailed explanations, see [the wiki](https://github.com/PneumonoIsNotAvailable/Gravestones/wiki/Configs).
@@ -70,7 +66,6 @@ This is a short summary of some of the mod's configs. For the full list with mor
 
 ### Compatibility
 This modified version has built-in support for:
-- **Accessories** - Full integration with the Accessories mod (NEW)
 - **Trinkets** - Original compatibility maintained  
 - Several **Soulbound enchantment mods**
 - **Spelunkery's recovery compass** changes
@@ -109,7 +104,7 @@ This enhanced version depends on:
 ### License
 This project is licensed under the MIT License - same as the original mod.
 - Original Gravestones: Copyright (c) 2023 Pneumono_
-- Soulbound Gravestones enhancements: Copyright (c) 2025 IgnacioDX
+- Soulbound Gravestones: Copyright (c) 2025 IgnacioDX
 
 See the [LICENSE](LICENSE) file for full details.
 
