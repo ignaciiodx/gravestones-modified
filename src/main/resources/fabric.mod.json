@@ -1,0 +1,62 @@
+{
+	"schemaVersion": 1,
+	"id": "gravestones",
+	"version": "${version}",
+	"name": "Gravestones (Modified)",
+	"description": "Adds Gravestones that store items after death. Modified version with Accessories compatibility and gravestone key feature. Original mod by Pneumono_.",
+	"authors": [
+		"IgnaciioDX"
+	],
+	"contributors": [
+		"Pneumono_ (Original Author)",
+		"EastMonster",
+		"dirtTW",
+		"wouter173",
+		"StarmanMine142"
+	],
+	"contact": {
+		"homepage": "https://modrinth.com/project/Heh3BbSv",
+		"sources": "https://github.com/PneumonoIsNotAvailable/Gravestones",
+		"issues": "https://github.com/PneumonoIsNotAvailable/Gravestones/issues"
+	},
+	"custom": {
+		"modmenu": {
+			"links": {
+				"modmenu.modrinth": "https://modrinth.com/project/Heh3BbSv",
+				"modmenu.wiki": "https://github.com/PneumonoIsNotAvailable/Gravestones/wiki"
+			}
+		}
+	},
+	"license": "MIT",
+	"icon": "assets/gravestones/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"net.pneumono.gravestones.Gravestones"
+		],
+		"client": [
+			"net.pneumono.gravestones.GravestonesClient"
+		],
+		"modmenu": [
+			"net.pneumono.gravestones.compat.ModMenuCompat"
+		]
+	},
+	"mixins": [
+		"gravestones.mixins.json",
+		{
+			"config": "gravestones.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"accessWidener": "gravestones.accesswidener",
+	"depends": {
+		"fabricloader": ">=0.16.14",
+		"minecraft": ">=1.21 <=1.21.1",
+		"java": ">=21",
+		"fabric-api": "*",
+		"pneumonocore": "*"
+	},
+	"suggests": {
+		"modmenu": "*"
+	}
+}
