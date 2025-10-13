@@ -23,6 +23,8 @@ public class GravestonesClient implements ClientModInitializer {
         BlockEntityRendererFactories.register(GravestonesRegistry.TECHNICAL_GRAVESTONE_ENTITY, TechnicalGravestoneBlockEntityRenderer::new);
         BlockEntityRendererFactories.register(GravestonesRegistry.AESTHETIC_GRAVESTONE_ENTITY, AestheticGravestoneBlockEntityRenderer::new);
 
+    // Blindness visuals are applied via a hidden vanilla effect in GravestoneCurseStatusEffect
+
         ClientPlayNetworking.registerGlobalReceiver(GravestoneEditorOpenS2CPayload.ID, (payload, context) -> {
             MinecraftClient client = context.client();
             ClientWorld world = client.world;

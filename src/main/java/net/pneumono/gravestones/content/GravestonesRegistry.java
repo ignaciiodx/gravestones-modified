@@ -15,6 +15,8 @@ import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SpawnGroup;
+import net.minecraft.entity.effect.StatusEffect;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroups;
 import net.minecraft.registry.*;
@@ -87,6 +89,12 @@ public class GravestonesRegistry {
             Registries.ITEM, 
             Gravestones.id("gravestone_key"), 
             new GravestoneKeyItem(new Item.Settings().maxCount(1).fireproof())
+    );
+
+    public static final RegistryEntry<StatusEffect> GRAVESTONE_CURSE = Registry.registerReference(
+            Registries.STATUS_EFFECT,
+            Gravestones.id("gravestone_curse"),
+            new GravestoneCurseStatusEffect()
     );
 
     public static final Identifier GRAVESTONES_COLLECTED = Gravestones.id("gravestones_collected");

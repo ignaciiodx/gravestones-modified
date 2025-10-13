@@ -1,6 +1,8 @@
 # Soulbound Gravestones
 
-> **This is an enhanced version of the original [Gravestones mod](https://modrinth.com/project/Heh3BbSv) by [PneumonoIsNotAvailable](https://github.com/PneumonoIsNotAvailable)**
+> **Enhanced Fork of [Gravestones](https://modrinth.com/project/Heh3BbSv) by [PneumonoIsNotAvailable](https://github.com/PneumonoIsNotAvailable)**
+> 
+> This is a modified version that adds a soulbound key system, complete gravestone history & recovery, and enhanced mod compatibility. All original features and credits belong to the original author Pneumono_.
 
 ![A screenshot of a gravestone in front of a cliff. Written on the gravestone is the name Pneumono_, and the date and time of death.](images/gravestone.png)
 
@@ -16,9 +18,17 @@ Soulbound Gravestones is an enhanced version of the original Gravestones mod tha
 - Cannot be dropped or thrown away - it's bound to your soul
 - Key behavior can be disabled or customized in the config
 
-📜 **Gravestone History & Recovery System**: Never lose your items to bugs or accidents again
+� **Gravestone Curse**: Opening a gravestone applies a powerful curse effect
+- **Slowness III** (45% movement speed reduction) for 5 seconds
+- **Blindness** effect (reduced visibility and fog) for 5 seconds
+- **Hunger Drain**: Consumes up to 4 hunger points (2 hunger bars)
+- The curse is represented by a single custom status effect with a key icon
+- Replicates vanilla blindness visuals perfectly without showing individual effect icons
+
+�📜 **Gravestone History & Recovery System**: Never lose your items to bugs or accidents again
 - Automatically stores your last 20 gravestones with all their data
-- Use `/gravestones history list` to view your gravestone history
+- Use `/gravestones history list` to view your gravestone history with an interactive GUI
+- Click **[View]** to preview gravestone contents or **[Spawn]** to restore it at your location
 - Use `/gravestones history restore <index>` to recreate a lost gravestone
 - Perfect for recovering from server crashes, bugs, or accidental destruction
 
@@ -85,11 +95,25 @@ This enhanced version depends on:
 - [Accessories](https://modrinth.com/mod/accessories) (optional, for enhanced compatibility)
 
 ### Credits
-- **Original Mod**: [Gravestones by PneumonoIsNotAvailable](https://modrinth.com/project/Heh3BbSv)
-- **Enhanced Version**: Soulbound Gravestones by IgnaciioDX
-- **New Features**: Soulbound key system, gravestone history & recovery, enhanced Accessories integration
+- **Original Mod Author**: [Pneumono_](https://github.com/PneumonoIsNotAvailable) - Creator of [Gravestones](https://modrinth.com/project/Heh3BbSv)
+- **Fork Author**: IgnacioDX ([ignaciiodx](https://github.com/ignaciiodx)) - Soulbound Gravestones enhancements
+- **Original Contributors**: EastMonster, dirtTW, wouter173, StarmanMine142
+- **New Features in This Fork**:
+  - Soulbound gravestone key with teleportation mechanics
+  - Complete gravestone history & recovery system with interactive GUI
+  - Gravestone Curse: Opening gravestones applies Slowness III, Blindness, and drains hunger
+  - Enhanced Accessories integration
+  - Configurable key behavior and teleport delay
+  - Prevention of accidental key dropping/throwing
+
+### License
+This project is licensed under the MIT License - same as the original mod.
+- Original Gravestones: Copyright (c) 2023 Pneumono_
+- Soulbound Gravestones enhancements: Copyright (c) 2025 IgnacioDX
+
+See the [LICENSE](LICENSE) file for full details.
 
 ### Links
-- [Original Gravestones on Modrinth](https://modrinth.com/project/Heh3BbSv)
-- [Original Source Code](https://github.com/PneumonoIsNotAvailable/Gravestones)
-- [Accessories Mod](https://modrinth.com/mod/accessories)
+- **This Fork**: [Soulbound Gravestones on GitHub](https://github.com/ignaciiodx/Soulbound-Gravestones)
+- **Original Mod**: [Gravestones on Modrinth](https://modrinth.com/project/Heh3BbSv) | [Source Code](https://github.com/PneumonoIsNotAvailable/Gravestones)
+- **Dependencies**: [PneumonoCore](https://modrinth.com/project/ZLKQjA7t) | [Accessories](https://modrinth.com/mod/accessories)

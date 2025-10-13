@@ -7,6 +7,7 @@ import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityTicker;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.component.type.ProfileComponent;
+import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
@@ -90,6 +91,18 @@ public class TechnicalGravestoneBlock extends AbstractGravestoneBlock {
 
         GravestonesApi.onCollect(world, pos, player, gravestone.getDecay(), gravestone.getContents());
         gravestone.setContents(new NbtCompound());
+
+        // Consume 4 hunger (2 hunger bars) if player has enough
+        if (player.getHungerManager().getFoodLevel() >= 4) {
+            player.getHungerManager().add(-4, 0.0F);
+        } else {
+            // If player has less than 4, consume what they have
+            player.getHungerManager().setFoodLevel(0);
+        }
+
+        // Apply Gravestone Curse effect when opening gravestone
+        // Amplifier 2 = -45% movement speed (Slowness III equivalent)
+        player.addStatusEffect(new StatusEffectInstance(GravestonesRegistry.GRAVESTONE_CURSE, 100, 2));
 
         player.incrementStat(GravestonesRegistry.GRAVESTONES_COLLECTED);
         MinecraftServer server = world.getServer();

@@ -5,8 +5,14 @@ import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.command.argument.BlockPosArgumentType;
 import net.minecraft.command.argument.EntityArgumentType;
 import net.minecraft.component.type.ProfileComponent;
+import net.minecraft.inventory.SimpleInventory;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtHelper;
+import net.minecraft.nbt.NbtList;
+import net.minecraft.screen.GenericContainerScreenHandler;
+import net.minecraft.screen.SimpleNamedScreenHandlerFactory;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -125,41 +131,44 @@ public class GravestonesCommands {
                                         context -> getUuid(context, context.getSource().getPlayerOrThrow())
                                 )
                         )
-                        .then(literal("history")
-                                .then(literal("list")
-                                        .then(argument("player", EntityArgumentType.player())
-                                                .executes(context -> listHistory(context, EntityArgumentType.getPlayer(context, "player")))
-                                        )
-                                        .executes(context -> listHistory(context, context.getSource().getPlayerOrThrow()))
+                        .then(literal("list")
+                                .then(argument("player", EntityArgumentType.player())
+                                        .executes(context -> listHistory(context, EntityArgumentType.getPlayer(context, "player")))
                                 )
-                                .then(literal("view")
-                                        .then(argument("uuid", com.mojang.brigadier.arguments.StringArgumentType.string())
-                                                .then(argument("index", com.mojang.brigadier.arguments.IntegerArgumentType.integer(0, 19))
-                                                        .executes(context -> viewHistoryInventory(
-                                                                context,
-                                                                com.mojang.brigadier.arguments.StringArgumentType.getString(context, "uuid"),
-                                                                com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(context, "index")
-                                                        ))
-                                                )
-                                        )
-                                )
-                                .then(literal("restore")
-                                        .then(argument("player", EntityArgumentType.player())
-                                                .then(argument("index", com.mojang.brigadier.arguments.IntegerArgumentType.integer(0, 19))
-                                                        .executes(context -> restoreFromHistory(
-                                                                context,
-                                                                EntityArgumentType.getPlayer(context, "player"),
-                                                                com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(context, "index")
-                                                        ))
-                                                )
-                                        )
-                                        .then(argument("index", com.mojang.brigadier.arguments.IntegerArgumentType.integer(0, 19))
-                                                .executes(context -> restoreFromHistory(
+                                .executes(context -> listHistory(context, context.getSource().getPlayerOrThrow()))
+                        )
+                        .then(literal("spawn")
+                                .then(argument("player", EntityArgumentType.player())
+                                        .then(argument("index", com.mojang.brigadier.arguments.IntegerArgumentType.integer(0))
+                                                .executes(context -> spawnGravestoneFromHistory(
                                                         context,
-                                                        context.getSource().getPlayerOrThrow(),
+                                                        EntityArgumentType.getPlayer(context, "player"),
                                                         com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(context, "index")
                                                 ))
                                         )
+                                )
+                                .then(argument("index", com.mojang.brigadier.arguments.IntegerArgumentType.integer(0))
+                                        .executes(context -> spawnGravestoneFromHistory(
+                                                context,
+                                                context.getSource().getPlayerOrThrow(),
+                                                com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(context, "index")
+                                        ))
+                                )
+                        )
+                )
+        );
+        
+        // Register internal command for clicking on history items (not visible in autocomplete)
+        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) ->
+                dispatcher.register(literal("gsinternalview")
+                        .requires(source -> source.hasPermissionLevel(0)) // Any player can use it
+                        .then(argument("uuid", com.mojang.brigadier.arguments.StringArgumentType.string())
+                                .then(argument("index", com.mojang.brigadier.arguments.IntegerArgumentType.integer(0))
+                                        .executes(context -> viewHistoryInventory(
+                                                context,
+                                                com.mojang.brigadier.arguments.StringArgumentType.getString(context, "uuid"),
+                                                com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(context, "index")
+                                        ))
                                 )
                         )
                 )
@@ -195,17 +204,25 @@ public class GravestonesCommands {
             long timeAgo = System.currentTimeMillis() - entry.getTimestamp();
             int minutesAgo = (int) (timeAgo / 60000);
             
-            // Create clickable text that opens the inventory GUI
+            // Create clickable buttons for view and spawn (includes player name to avoid confusion)
             Text message = Text.literal(String.format("[%d] ", index))
                     .formatted(Formatting.GREEN)
-                    .append(Text.literal("📦 ").formatted(Formatting.YELLOW)
+                    .append(Text.literal("[View] ").formatted(Formatting.YELLOW)
                             .styled(style -> style
                                     .withClickEvent(new net.minecraft.text.ClickEvent(
                                             net.minecraft.text.ClickEvent.Action.RUN_COMMAND,
-                                            "/gravestones history view " + player.getUuidAsString() + " " + index))
+                                            "/gsinternalview " + player.getUuidAsString() + " " + index))
                                     .withHoverEvent(new net.minecraft.text.HoverEvent(
                                             net.minecraft.text.HoverEvent.Action.SHOW_TEXT,
                                             Text.literal("Click to view inventory").formatted(Formatting.AQUA)))))
+                    .append(Text.literal("[Spawn] ").formatted(Formatting.LIGHT_PURPLE)
+                            .styled(style -> style
+                                    .withClickEvent(new net.minecraft.text.ClickEvent(
+                                            net.minecraft.text.ClickEvent.Action.RUN_COMMAND,
+                                            "/gravestones spawn " + player.getName().getString() + " " + index))
+                                    .withHoverEvent(new net.minecraft.text.HoverEvent(
+                                            net.minecraft.text.HoverEvent.Action.SHOW_TEXT,
+                                            Text.literal("Click to spawn gravestone at your location").formatted(Formatting.LIGHT_PURPLE)))))
                     .append(Text.literal(String.format("%s at (%d, %d, %d) - %d minutes ago",
                             dimension, pos.getX(), pos.getY(), pos.getZ(), minutesAgo))
                             .formatted(Formatting.GREEN));
@@ -213,12 +230,12 @@ public class GravestonesCommands {
             context.getSource().sendFeedback(() -> message, false);
         }
         
-        context.getSource().sendFeedback(() -> Text.literal("Click 📦 to view inventory | Use /gravestones history restore <player> <index> to restore").formatted(Formatting.AQUA), false);
+        context.getSource().sendFeedback(() -> Text.literal("Click [View] to preview | Click [Spawn] to restore at your location").formatted(Formatting.AQUA), false);
         
         return history.size();
     }
     
-    private static int restoreFromHistory(CommandContext<ServerCommandSource> context, ServerPlayerEntity player, int index) {
+    private static int spawnGravestoneFromHistory(CommandContext<ServerCommandSource> context, ServerPlayerEntity player, int index) {
         net.pneumono.gravestones.GravestoneHistoryEntry entry = Gravestones.getHistoryEntry(player.getUuid(), index);
         
         if (entry == null) {
@@ -226,37 +243,185 @@ public class GravestonesCommands {
             return 0;
         }
         
-        ServerWorld world = context.getSource().getServer().getWorld(entry.getDimension());
-        if (world == null) {
-            context.getSource().sendFeedback(() -> Text.literal("Dimension not found: " + entry.getDimension().getValue()).formatted(Formatting.RED), false);
+        try {
+            ServerPlayerEntity executor = context.getSource().getPlayerOrThrow();
+            ServerWorld world = executor.getServerWorld();
+            BlockPos spawnPos = executor.getBlockPos();
+            
+            // Place the gravestone block at the executor's position
+            world.setBlockState(spawnPos, GravestonesRegistry.GRAVESTONE_TECHNICAL.getDefaultState());
+            
+            // Set the block entity data
+            if (world.getBlockEntity(spawnPos) instanceof TechnicalGravestoneBlockEntity gravestone) {
+                NbtCompound data = entry.getGravestoneData();
+                gravestone.setContents(data);
+                gravestone.setGraveOwner(new ProfileComponent(player.getGameProfile()));
+                gravestone.setSpawnDate("Restored", world.getTime());
+                
+                world.updateListeners(spawnPos, gravestone.getCachedState(), gravestone.getCachedState(), net.minecraft.block.Block.NOTIFY_LISTENERS);
+                
+                BlockPos originalPos = entry.getPosition();
+                String originalDim = entry.getDimension().getValue().toString();
+                
+                context.getSource().sendFeedback(() -> Text.literal(String.format("Spawned gravestone #%d for %s at your location. Original location: %s at (%d, %d, %d)",
+                        index, player.getDisplayName().getString(), originalDim, originalPos.getX(), originalPos.getY(), originalPos.getZ()))
+                        .formatted(Formatting.GREEN), true);
+                
+                Gravestones.LOGGER.info("Spawned gravestone #{} for player {} at executor's location {}", 
+                        index, player.getDisplayName().getString(), spawnPos);
+                
+                return 1;
+            }
+            
+            context.getSource().sendFeedback(() -> Text.literal("Failed to spawn gravestone - could not create block entity").formatted(Formatting.RED), false);
+            return 0;
+        } catch (Exception e) {
+            context.getSource().sendFeedback(() -> Text.literal("Error spawning gravestone: " + e.getMessage()).formatted(Formatting.RED), false);
+            Gravestones.LOGGER.error("Error spawning gravestone from history", e);
             return 0;
         }
-        
-        BlockPos pos = entry.getPosition();
-        
-        // Place the gravestone block
-        world.setBlockState(pos, GravestonesRegistry.GRAVESTONE_TECHNICAL.getDefaultState());
-        
-        // Set the block entity data
-        if (world.getBlockEntity(pos) instanceof TechnicalGravestoneBlockEntity gravestone) {
+    }
+    
+    private static int viewHistoryInventory(CommandContext<ServerCommandSource> context, String uuidString, int index) {
+        try {
+            UUID playerUuid = UUID.fromString(uuidString);
+            net.pneumono.gravestones.GravestoneHistoryEntry entry = Gravestones.getHistoryEntry(playerUuid, index);
+            
+            if (entry == null) {
+                context.getSource().sendFeedback(() -> Text.literal("Invalid history index: " + index).formatted(Formatting.RED), false);
+                return 0;
+            }
+            
+            ServerPlayerEntity viewer = context.getSource().getPlayerOrThrow();
             NbtCompound data = entry.getGravestoneData();
-            gravestone.setContents(data);
-            gravestone.setGraveOwner(new ProfileComponent(player.getGameProfile()));
-            gravestone.setSpawnDate("Restored", world.getTime());
             
-            world.updateListeners(pos, gravestone.getCachedState(), gravestone.getCachedState(), net.minecraft.block.Block.NOTIFY_LISTENERS);
+            // Create an inventory with 6 rows (54 slots) like a double chest
+            SimpleInventory inventory = new SimpleInventory(54);
             
-            context.getSource().sendFeedback(() -> Text.literal(String.format("Restored gravestone #%d for %s at (%d, %d, %d) in %s",
-                    index, player.getDisplayName().getString(), pos.getX(), pos.getY(), pos.getZ(), entry.getDimension().getValue()))
-                    .formatted(Formatting.GREEN), true);
+            int currentSlot = 0;
             
-            Gravestones.LOGGER.info("Restored gravestone #{} for player {} at {} in {}", 
-                    index, player.getDisplayName().getString(), pos, entry.getDimension().getValue());
+            // Add regular inventory items
+            if (data.contains("gravestones:inventory")) {
+                NbtCompound inventoryData = data.getCompound("gravestones:inventory");
+                if (inventoryData.contains("inventory")) {
+                    NbtList inventoryList = inventoryData.getList("inventory", 10); // 10 = compound type
+                    
+                    // Use the same decoding logic as PlayerInventoryDataType.onBreak
+                    currentSlot = addItemsToInventory(inventory, inventoryList, viewer, currentSlot);
+                }
+            }
+            
+            // Add Accessories items if present
+            if (data.contains("gravestones:accessories")) {
+                NbtCompound accessoriesData = data.getCompound("gravestones:accessories");
+                if (accessoriesData.contains("accessories")) {
+                    NbtElement accessoriesList = accessoriesData.get("accessories");
+                    currentSlot = addAccessoriesToInventory(inventory, accessoriesList, viewer, currentSlot);
+                }
+            }
+            
+            // Add Trinkets items if present
+            if (data.contains("pneumonocore:trinkets")) {
+                NbtCompound trinketsData = data.getCompound("pneumonocore:trinkets");
+                if (trinketsData.contains("trinkets")) {
+                    NbtElement trinketsList = trinketsData.get("trinkets");
+                    currentSlot = addTrinketsToInventory(inventory, trinketsList, viewer, currentSlot);
+                }
+            }
+            
+            BlockPos pos = entry.getPosition();
+            String dimension = entry.getDimension().getValue().toString();
+            
+            // Open the GUI
+            viewer.openHandledScreen(new SimpleNamedScreenHandlerFactory(
+                    (syncId, playerInventory, player) -> 
+                        GenericContainerScreenHandler.createGeneric9x6(syncId, playerInventory, inventory),
+                    Text.literal(String.format("Gravestone #%d - %s at (%d, %d, %d)", 
+                            index, dimension, pos.getX(), pos.getY(), pos.getZ()))
+                            .formatted(Formatting.GOLD)
+            ));
             
             return 1;
+        } catch (IllegalArgumentException e) {
+            context.getSource().sendFeedback(() -> Text.literal("Invalid UUID: " + uuidString).formatted(Formatting.RED), false);
+            return 0;
+        } catch (Exception e) {
+            context.getSource().sendFeedback(() -> Text.literal("Error opening inventory: " + e.getMessage()).formatted(Formatting.RED), false);
+            Gravestones.LOGGER.error("Error opening gravestone history inventory", e);
+            return 0;
         }
+    }
+    
+    private static int addItemsToInventory(SimpleInventory inventory, NbtList itemList, ServerPlayerEntity viewer, int startSlot) {
+        final int[] currentSlot = {startSlot}; // Use array to make it effectively final
         
-        context.getSource().sendFeedback(() -> Text.literal("Failed to restore gravestone - could not create block entity").formatted(Formatting.RED), false);
-        return 0;
+        itemList.stream()
+                .map(element -> PlayerInventoryDataType.StackWithSlot.CODEC.decode(
+                        viewer.getRegistryManager().getOps(net.minecraft.nbt.NbtOps.INSTANCE), element))
+                .filter(com.mojang.serialization.DataResult::isSuccess)
+                .map(result -> result.getOrThrow().getFirst())
+                .forEach(stackWithSlot -> {
+                    ItemStack stack = stackWithSlot.stack();
+                    if (!stack.isEmpty() && currentSlot[0] < 54) {
+                        inventory.setStack(currentSlot[0], stack.copy());
+                        currentSlot[0]++;
+                    }
+                });
+        
+        return currentSlot[0];
+    }
+    
+    private static int addAccessoriesToInventory(SimpleInventory inventory, NbtElement accessoriesElement, ServerPlayerEntity viewer, int startSlot) {
+        try {
+            int currentSlot = startSlot;
+            
+            // Decode the accessories list using the same codec as AccessoriesDataType
+            com.mojang.serialization.DataResult<com.mojang.datafixers.util.Pair<java.util.List<net.pneumono.gravestones.compat.AccessoriesDataType.SlotReferencePrimitive>, NbtElement>> result = 
+                    net.pneumono.gravestones.compat.AccessoriesDataType.SlotReferencePrimitive.CODEC.listOf()
+                            .decode(viewer.getRegistryManager().getOps(net.minecraft.nbt.NbtOps.INSTANCE), accessoriesElement);
+            
+            if (result.isSuccess()) {
+                java.util.List<net.pneumono.gravestones.compat.AccessoriesDataType.SlotReferencePrimitive> accessories = result.getOrThrow().getFirst();
+                for (net.pneumono.gravestones.compat.AccessoriesDataType.SlotReferencePrimitive primitive : accessories) {
+                    ItemStack stack = primitive.stack();
+                    if (!stack.isEmpty() && currentSlot < 54) {
+                        inventory.setStack(currentSlot, stack.copy());
+                        currentSlot++;
+                    }
+                }
+            }
+            
+            return currentSlot;
+        } catch (Exception e) {
+            Gravestones.LOGGER.warn("Failed to load accessories for history view", e);
+            return startSlot;
+        }
+    }
+    
+    private static int addTrinketsToInventory(SimpleInventory inventory, NbtElement trinketsElement, ServerPlayerEntity viewer, int startSlot) {
+        try {
+            int currentSlot = startSlot;
+            
+            // Decode the trinkets list using the same codec as TrinketsDataType - returns Pair<SlotReferencePrimitive, ItemStack>
+            com.mojang.serialization.DataResult<com.mojang.datafixers.util.Pair<java.util.List<com.mojang.datafixers.util.Pair<net.pneumono.gravestones.compat.TrinketsDataType.SlotReferencePrimitive, ItemStack>>, NbtElement>> result = 
+                    net.pneumono.gravestones.compat.TrinketsDataType.SLOT_CODEC.listOf()
+                            .decode(viewer.getRegistryManager().getOps(net.minecraft.nbt.NbtOps.INSTANCE), trinketsElement);
+            
+            if (result.isSuccess()) {
+                java.util.List<com.mojang.datafixers.util.Pair<net.pneumono.gravestones.compat.TrinketsDataType.SlotReferencePrimitive, ItemStack>> trinkets = result.getOrThrow().getFirst();
+                for (com.mojang.datafixers.util.Pair<net.pneumono.gravestones.compat.TrinketsDataType.SlotReferencePrimitive, ItemStack> pair : trinkets) {
+                    ItemStack stack = pair.getSecond(); // Get the ItemStack from the Pair
+                    if (!stack.isEmpty() && currentSlot < 54) {
+                        inventory.setStack(currentSlot, stack.copy());
+                        currentSlot++;
+                    }
+                }
+            }
+            
+            return currentSlot;
+        } catch (Exception e) {
+            Gravestones.LOGGER.warn("Failed to load trinkets for history view", e);
+            return startSlot;
+        }
     }
 }

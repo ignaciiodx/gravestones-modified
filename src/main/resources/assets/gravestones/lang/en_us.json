@@ -12,6 +12,8 @@
   "item.gravestones.gravestone_key.wrong_dimension": "Your gravestone is in a different dimension!",
   "item.gravestones.gravestone_key.invalid": "This gravestone key is invalid or corrupted!",
 
+  "effect.gravestones.gravestone_curse": "Gravestone Curse",
+
   "gravestones.cannot_open_no_owner": "This gravestone has no owner!",
   "gravestones.cannot_open_wrong_player": "This gravestone can only be interacted with by its owner, %s!",
   "gravestones.edit_text": "Edit Gravestone Message",
@@ -90,6 +92,8 @@
   "configs.gravestones.give_gravestone_key.tooltip": "Whether a gravestone key is given to the player upon respawning",
   "configs.gravestones.key_teleport_delay": "Key Teleport Delay",
   "configs.gravestones.key_teleport_delay.tooltip": "The time in seconds it takes to use the gravestone key (charge-up time when holding right-click)",
+  "configs.gravestones.gravestone_history_size": "Gravestone History Size",
+  "configs.gravestones.gravestone_history_size.tooltip": "Maximum number of gravestones stored in history per player for recovery purposes (default: 8, min: 1)",
   "configs.gravestones.aesthetic_gravestones": "Aesthetic Gravestones",
   "configs.gravestones.aesthetic_gravestones.tooltip": "Whether aesthetic gravestones can be crafted for building purposes",
   "configs.gravestones.spawn_gravestone_skeletons": "Spawn Skeletons",
@@ -105,6 +109,6 @@
   "configs.gravestones.time_format.tooltip": "The format of the death time shown on gravestones",
 
   "modmenu.nameTranslation.gravestones": "Soulbound Gravestones",
-  "modmenu.summaryTranslation.gravestones": "Adds Gravestones that store items after death. Enhanced version by ignaciiodx with soulbound key teleportation.",
+  "modmenu.summaryTranslation.gravestones": "Adds Gravestones that store items after death. Enhanced version by IgnacioDX with soulbound key teleportation.",
   "modmenu.descriptionTranslation.gravestones": "Adds Gravestones that store items after death. This enhanced version features Accessories compatibility, a soulbound gravestone key for teleportation, and a recovery system for lost graves. Based on the original mod by Pneumono_."
 }

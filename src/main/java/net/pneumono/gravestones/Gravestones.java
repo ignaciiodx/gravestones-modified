@@ -9,6 +9,7 @@ import net.minecraft.item.Items;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.GlobalPos;
 import net.pneumono.gravestones.api.InsertGravestoneItemCallback;
@@ -36,9 +37,16 @@ public class Gravestones implements ModInitializer {
 	// Store the most recent gravestone position for each player
 	private static final Map<UUID, GlobalPos> RECENT_GRAVESTONES = new HashMap<>();
 	
-	// Store the last 20 gravestones for each player (for recovery purposes)
+	// Store gravestones for each player (for recovery purposes)
 	private static final Map<UUID, LinkedList<GravestoneHistoryEntry>> GRAVESTONE_HISTORY = new HashMap<>();
-	private static final int MAX_HISTORY_SIZE = 20;
+	
+	/**
+	 * Get the maximum history size from config
+	 */
+	public static int getMaxHistorySize() {
+		// Convert float to int and ensure it's at least 1
+		return Math.max(1, (int) Math.floor(GravestonesConfig.GRAVESTONE_HISTORY_SIZE.getValue()));
+	}
 
 	@Override
 	public void onInitialize() {
@@ -46,6 +54,18 @@ public class Gravestones implements ModInitializer {
 		GravestonesConfig.registerGravestonesConfigs();
 
 		ServerLifecycleEvents.SERVER_STARTED.register(BackwardsCompat::convertOldFiles);
+		
+		// Load gravestone history when server starts
+		ServerLifecycleEvents.SERVER_STARTED.register(server -> {
+			LOGGER.info("Loading gravestone history from disk...");
+			net.pneumono.gravestones.gravestones.GravestoneHistoryIO.loadAllHistories(server, GRAVESTONE_HISTORY);
+		});
+		
+		// Save gravestone history when server stops
+		ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
+			LOGGER.info("Saving gravestone history to disk...");
+			net.pneumono.gravestones.gravestones.GravestoneHistoryIO.saveAllHistories(server, GRAVESTONE_HISTORY);
+		});
 
 		GravestonesRegistry.registerModContent();
 		GravestonesCommands.registerCommands();
@@ -107,20 +127,25 @@ public class Gravestones implements ModInitializer {
 	
 	/**
 	 * Add a gravestone to the player's history
-	 * Stores the last 20 gravestones for recovery purposes
+	 * Stores gravestones for recovery purposes (configurable size)
+	 * Automatically saves to disk
 	 */
-	public static void addToHistory(UUID playerUuid, GravestoneHistoryEntry entry) {
+	public static void addToHistory(UUID playerUuid, GravestoneHistoryEntry entry, MinecraftServer server) {
 		LinkedList<GravestoneHistoryEntry> history = GRAVESTONE_HISTORY.computeIfAbsent(playerUuid, k -> new LinkedList<>());
 		
 		// Add to the front of the list (most recent first)
 		history.addFirst(entry);
 		
 		// Remove oldest entries if we exceed the limit
-		while (history.size() > MAX_HISTORY_SIZE) {
+		int maxSize = getMaxHistorySize();
+		while (history.size() > maxSize) {
 			history.removeLast();
 		}
 		
-		LOGGER.info("[HISTORY] Added gravestone to history for player {}. Total entries: {}", playerUuid, history.size());
+		LOGGER.info("[HISTORY] Added gravestone to history for player {}. Total entries: {}/{}", playerUuid, history.size(), maxSize);
+		
+		// Auto-save to disk
+		net.pneumono.gravestones.gravestones.GravestoneHistoryIO.saveHistory(server, playerUuid, history);
 	}
 	
 	/**
@@ -163,13 +188,12 @@ public class Gravestones implements ModInitializer {
 					player.dropItem(keyStack, false);
 				}
 				
-				// Send messages to player with colored coordinates (cyan like death message)
-				player.sendMessage(Text.translatable("item.gravestones.gravestone_key.received"), false);
-				
-				// Build message: "PlayerName's grave is at (x, y, z)" with cyan coordinates
-				Text message = Text.literal(player.getGameProfile().getName() + "'s grave is at ")
+				// Send styled message: [SG] You received a Gravestone Key! (red prefix, message, yellow coordinates)
+				Text message = Text.literal("[SG] ").formatted(Formatting.RED, Formatting.BOLD)
+					.append(Text.literal("You received a Gravestone Key! Your grave is at ")
+						.formatted(Formatting.RED))
 					.append(Text.literal(GravestoneManager.posToString(recentGravestone.pos()))
-						.styled(style -> style.withColor(0x00FFFF))); // Cyan color
+						.formatted(Formatting.YELLOW));
 				
 				player.sendMessage(message, false);
 				

@@ -56,6 +56,9 @@ public class GravestonesConfig {
     public static final FloatConfiguration KEY_TELEPORT_DELAY = register("key_teleport_delay", new FloatConfiguration(
             3f, new ConfigSettings().category("multiplayer").loadType(LoadType.INSTANT)
     ));
+    public static final FloatConfiguration GRAVESTONE_HISTORY_SIZE = register("gravestone_history_size", new FloatConfiguration(
+            8f, new ConfigSettings().category("multiplayer").loadType(LoadType.INSTANT)
+    ));
 
     public static final BooleanConfiguration AESTHETIC_GRAVESTONES = register("aesthetic_gravestones", new BooleanConfiguration(
             true, new ConfigSettings().loadType(LoadType.RESTART)

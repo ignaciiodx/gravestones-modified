@@ -1,30 +1,31 @@
 {
 	"schemaVersion": 1,
-	"id": "gravestones",
+	"id": "soulbound-gravestones",
 	"version": "${version}",
 	"name": "Soulbound Gravestones",
-	"description": "Adds Gravestones that store items after death. Enhanced version with Accessories compatibility, soulbound gravestone key with teleportation, and gravestone recovery system. Based on the original mod by Pneumono_.",
+	"description": "Enhanced fork of Gravestones by Pneumono_. Adds soulbound gravestone key with teleportation, Gravestone Curse effect, complete gravestone history & recovery GUI, and enhanced Accessories integration. Original mod stores items on death in decorative gravestones.",
 	"authors": [
-		"IgnaciioDX"
+		"IgnacioDX (Fork Author)",
+		"Pneumono_ (Original Mod Author)"
 	],
 	"contributors": [
-		"Pneumono_ (Original Author)",
 		"EastMonster",
 		"dirtTW",
 		"wouter173",
 		"StarmanMine142"
 	],
 	"contact": {
-		"homepage": "https://modrinth.com/project/Heh3BbSv",
-		"sources": "https://github.com/PneumonoIsNotAvailable/Gravestones",
-		"issues": "https://github.com/PneumonoIsNotAvailable/Gravestones/issues"
+		"homepage": "https://github.com/ignaciiodx/Soulbound-Gravestones",
+		"sources": "https://github.com/ignaciiodx/Soulbound-Gravestones",
+		"issues": "https://github.com/ignaciiodx/Soulbound-Gravestones/issues"
 	},
 	"custom": {
 		"modmenu": {
 			"links": {
-				"modmenu.modrinth": "https://modrinth.com/project/Heh3BbSv",
-				"modmenu.wiki": "https://github.com/PneumonoIsNotAvailable/Gravestones/wiki"
-			}
+				"modmenu.discord": "https://discord.gg/your-discord-here",
+				"modmenu.modrinth.original": "https://modrinth.com/project/Heh3BbSv"
+			},
+			"badges": ["library"]
 		}
 	},
 	"license": "MIT",

@@ -78,14 +78,14 @@ public class GravestoneCreation extends GravestoneManager {
         // Register this as the most recent gravestone for the player
         Gravestones.setRecentGravestone(player.getUuid(), gravestonePos);
         
-        // Add to gravestone history for recovery purposes
+        // Add to gravestone history for recovery purposes (auto-saves to disk)
         GravestoneHistoryEntry historyEntry = new GravestoneHistoryEntry(
             gravestonePos.pos(),
             gravestonePos.dimension(),
             System.currentTimeMillis(),
             contents.copy()
         );
-        Gravestones.addToHistory(player.getUuid(), historyEntry);
+        Gravestones.addToHistory(player.getUuid(), historyEntry, deathWorld.getServer());
 
         // Callbacks
         GravestonePlacedCallback.EVENT.invoker().afterGravestonePlace(deathWorld, player, deathPos, gravestonePos);
