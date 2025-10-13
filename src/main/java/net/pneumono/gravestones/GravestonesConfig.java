@@ -50,6 +50,12 @@ public class GravestonesConfig {
     public static final BooleanConfiguration BROADCAST_COORDINATES_IN_CHAT = register("broadcast_coordinates_in_chat", new BooleanConfiguration(
             false, new ConfigSettings().category("multiplayer").loadType(LoadType.INSTANT)
     ));
+    public static final BooleanConfiguration GIVE_GRAVESTONE_KEY = register("give_gravestone_key", new BooleanConfiguration(
+            true, new ConfigSettings().category("multiplayer").loadType(LoadType.INSTANT)
+    ));
+    public static final FloatConfiguration KEY_TELEPORT_DELAY = register("key_teleport_delay", new FloatConfiguration(
+            3f, new ConfigSettings().category("multiplayer").loadType(LoadType.INSTANT)
+    ));
 
     public static final BooleanConfiguration AESTHETIC_GRAVESTONES = register("aesthetic_gravestones", new BooleanConfiguration(
             true, new ConfigSettings().loadType(LoadType.RESTART)

@@ -16,6 +16,7 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import net.minecraft.world.dimension.DimensionType;
 import net.pneumono.gravestones.Gravestones;
+import net.pneumono.gravestones.GravestoneHistoryEntry;
 import net.pneumono.gravestones.GravestonesConfig;
 import net.pneumono.gravestones.api.CancelGravestonePlacementCallback;
 import net.pneumono.gravestones.api.GravestonePlacedCallback;
@@ -73,6 +74,18 @@ public class GravestoneCreation extends GravestoneManager {
         if (GravestonesConfig.BROADCAST_COORDINATES_IN_CHAT.getValue()) {
             deathWorld.getServer().getPlayerManager().broadcast(Text.translatable("gravestones.grave_spawned", player.getGameProfile().getName(), posToString(gravestonePos.pos())), false);
         }
+
+        // Register this as the most recent gravestone for the player
+        Gravestones.setRecentGravestone(player.getUuid(), gravestonePos);
+        
+        // Add to gravestone history for recovery purposes
+        GravestoneHistoryEntry historyEntry = new GravestoneHistoryEntry(
+            gravestonePos.pos(),
+            gravestonePos.dimension(),
+            System.currentTimeMillis(),
+            contents.copy()
+        );
+        Gravestones.addToHistory(player.getUuid(), historyEntry);
 
         // Callbacks
         GravestonePlacedCallback.EVENT.invoker().afterGravestonePlace(deathWorld, player, deathPos, gravestonePos);

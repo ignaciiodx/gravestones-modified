@@ -1,14 +1,37 @@
-# Gravestones
+# Soulbound Gravestones
 
-[Modrinth Page](https://modrinth.com/project/Heh3BbSv)
+> **This is an enhanced version of the original [Gravestones mod](https://modrinth.com/project/Heh3BbSv) by [PneumonoIsNotAvailable](https://github.com/PneumonoIsNotAvailable)**
 
 ![A screenshot of a gravestone in front of a cliff. Written on the gravestone is the name Pneumono_, and the date and time of death.](images/gravestone.png)
 
-Gravestones adds blocks which store your items on death.
+## About This Version
 
-It's a fairly standard grave mod, but with nicer, vanilla-style textures, extra config options to help tailor the mod to specific servers, and the option to use gravestones in builds.
+Soulbound Gravestones is an enhanced version of the original Gravestones mod that adds blocks which store your items on death. The original mod is a fairly standard grave mod, but with nicer, vanilla-style textures, extra config options to help tailor the mod to specific servers, and the option to use gravestones in builds.
 
-See [the wiki](https://github.com/PneumonoIsNotAvailable/Gravestones/wiki) for more detailed information!
+### ✨ What's New in Soulbound Gravestones
+
+🔑 **Soulbound Gravestone Key**: A magical key that drops when you die, allowing you to teleport back to your gravestone
+- Hold right-click to charge the key (configurable delay with particles and sound effects)
+- Teleports you directly to your most recent gravestone
+- Cannot be dropped or thrown away - it's bound to your soul
+- Key behavior can be disabled or customized in the config
+
+📜 **Gravestone History & Recovery System**: Never lose your items to bugs or accidents again
+- Automatically stores your last 20 gravestones with all their data
+- Use `/gravestones history list` to view your gravestone history
+- Use `/gravestones history restore <index>` to recreate a lost gravestone
+- Perfect for recovering from server crashes, bugs, or accidental destruction
+
+🧰 **Accessories Integration**: Full compatibility and support for the [Accessories mod](https://modrinth.com/mod/accessories), ensuring accessory items are properly stored in gravestones
+
+⚙️ **Enhanced Configuration**:
+- Toggle gravestone key on/off
+- Adjust teleportation charge time (default: 1.6 seconds, like Waystones)
+- All original configuration options remain available
+
+### Original Mod Features
+
+The base Gravestones mod includes all the following features that remain unchanged:
 
 ### Decay
 Gravestone decay is very configurable and **all of its features can be configured or disabled** if they are not wanted!
@@ -36,7 +59,11 @@ This is a short summary of some of the mod's configs. For the full list with mor
 - And more!
 
 ### Compatibility
-At the time of writing, Gravestones has built-in support for Trinkets, several Soulbound enchantment mods, and Spelunkery's recovery compass changes. More mods will be added in the future.
+This modified version has built-in support for:
+- **Accessories** - Full integration with the Accessories mod (NEW)
+- **Trinkets** - Original compatibility maintained  
+- Several **Soulbound enchantment mods**
+- **Spelunkery's recovery compass** changes
 
 If another mod adds an item or enchantment with some kind of functionality on death that gravestones is affecting (e.g. an item that stays with the player on death, or something like Curse of Vanishing),
 datapack/modpack/mod developers can add it to the tag `gravestones:skips_gravestones`, which makes items ignore gravestones entirely, and act as if the mod is not installed.
@@ -53,6 +80,16 @@ Create a copy of the `en_us.json` file in the mod's asset folder, and rename it 
 Then simply go through all the English phrases and translate them.
 
 ### Dependencies
-Gravestones depends on my core mod, [PneumonoCore](https://modrinth.com/project/ZLKQjA7t).
+This enhanced version depends on:
+- [PneumonoCore](https://modrinth.com/project/ZLKQjA7t) (required)
+- [Accessories](https://modrinth.com/mod/accessories) (optional, for enhanced compatibility)
 
-[Download Gravestones on Modrinth](https://modrinth.com/project/Heh3BbSv)
+### Credits
+- **Original Mod**: [Gravestones by PneumonoIsNotAvailable](https://modrinth.com/project/Heh3BbSv)
+- **Enhanced Version**: Soulbound Gravestones by IgnaciioDX
+- **New Features**: Soulbound key system, gravestone history & recovery, enhanced Accessories integration
+
+### Links
+- [Original Gravestones on Modrinth](https://modrinth.com/project/Heh3BbSv)
+- [Original Source Code](https://github.com/PneumonoIsNotAvailable/Gravestones)
+- [Accessories Mod](https://modrinth.com/mod/accessories)

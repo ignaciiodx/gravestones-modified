@@ -86,6 +86,10 @@
   "configs.gravestones.broadcast_collect_in_chat.tooltip": "Whether grave collection is broadcasted in chat",
   "configs.gravestones.broadcast_coordinates_in_chat": "Broadcast Coordinates",
   "configs.gravestones.broadcast_coordinates_in_chat.tooltip": "Whether the coordinates of placed graves are broadcasted in chat",
+  "configs.gravestones.give_gravestone_key": "Give Gravestone Key",
+  "configs.gravestones.give_gravestone_key.tooltip": "Whether a gravestone key is given to the player upon respawning",
+  "configs.gravestones.key_teleport_delay": "Key Teleport Delay",
+  "configs.gravestones.key_teleport_delay.tooltip": "The time in seconds it takes to use the gravestone key (charge-up time when holding right-click)",
   "configs.gravestones.aesthetic_gravestones": "Aesthetic Gravestones",
   "configs.gravestones.aesthetic_gravestones.tooltip": "Whether aesthetic gravestones can be crafted for building purposes",
   "configs.gravestones.spawn_gravestone_skeletons": "Spawn Skeletons",
@@ -100,7 +104,7 @@
   "configs.gravestones.time_format.yyyymmdd": "YYYY/MM/DD",
   "configs.gravestones.time_format.tooltip": "The format of the death time shown on gravestones",
 
-  "modmenu.nameTranslation.gravestones": "Gravestones (Modified)",
-  "modmenu.summaryTranslation.gravestones": "Adds Gravestones that store items after death. Modified version by ignaciiodx.",
-  "modmenu.descriptionTranslation.gravestones": "Adds Gravestones that store items after death. This is a modified version with Accessories compatibility and gravestone key feature. Original mod by Pneumono_."
+  "modmenu.nameTranslation.gravestones": "Soulbound Gravestones",
+  "modmenu.summaryTranslation.gravestones": "Adds Gravestones that store items after death. Enhanced version by ignaciiodx with soulbound key teleportation.",
+  "modmenu.descriptionTranslation.gravestones": "Adds Gravestones that store items after death. This enhanced version features Accessories compatibility, a soulbound gravestone key for teleportation, and a recovery system for lost graves. Based on the original mod by Pneumono_."
 }

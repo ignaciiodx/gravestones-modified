@@ -2,8 +2,8 @@
 	"schemaVersion": 1,
 	"id": "gravestones",
 	"version": "${version}",
-	"name": "Gravestones (Modified)",
-	"description": "Adds Gravestones that store items after death. Modified version with Accessories compatibility and gravestone key feature. Original mod by Pneumono_.",
+	"name": "Soulbound Gravestones",
+	"description": "Adds Gravestones that store items after death. Enhanced version with Accessories compatibility, soulbound gravestone key with teleportation, and gravestone recovery system. Based on the original mod by Pneumono_.",
 	"authors": [
 		"IgnaciioDX"
 	],

@@ -125,6 +125,43 @@ public class GravestonesCommands {
                                         context -> getUuid(context, context.getSource().getPlayerOrThrow())
                                 )
                         )
+                        .then(literal("history")
+                                .then(literal("list")
+                                        .then(argument("player", EntityArgumentType.player())
+                                                .executes(context -> listHistory(context, EntityArgumentType.getPlayer(context, "player")))
+                                        )
+                                        .executes(context -> listHistory(context, context.getSource().getPlayerOrThrow()))
+                                )
+                                .then(literal("view")
+                                        .then(argument("uuid", com.mojang.brigadier.arguments.StringArgumentType.string())
+                                                .then(argument("index", com.mojang.brigadier.arguments.IntegerArgumentType.integer(0, 19))
+                                                        .executes(context -> viewHistoryInventory(
+                                                                context,
+                                                                com.mojang.brigadier.arguments.StringArgumentType.getString(context, "uuid"),
+                                                                com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(context, "index")
+                                                        ))
+                                                )
+                                        )
+                                )
+                                .then(literal("restore")
+                                        .then(argument("player", EntityArgumentType.player())
+                                                .then(argument("index", com.mojang.brigadier.arguments.IntegerArgumentType.integer(0, 19))
+                                                        .executes(context -> restoreFromHistory(
+                                                                context,
+                                                                EntityArgumentType.getPlayer(context, "player"),
+                                                                com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(context, "index")
+                                                        ))
+                                                )
+                                        )
+                                        .then(argument("index", com.mojang.brigadier.arguments.IntegerArgumentType.integer(0, 19))
+                                                .executes(context -> restoreFromHistory(
+                                                        context,
+                                                        context.getSource().getPlayerOrThrow(),
+                                                        com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(context, "index")
+                                                ))
+                                        )
+                                )
+                        )
                 )
         );
     }
@@ -138,5 +175,88 @@ public class GravestonesCommands {
     private static int getUuid(CommandContext<ServerCommandSource> context, ServerPlayerEntity player) {
         context.getSource().sendFeedback(() -> Text.translatable("commands.gravestones.getuuid", player.getDisplayName(), player.getUuidAsString()), false);
         return 1;
+    }
+    
+    private static int listHistory(CommandContext<ServerCommandSource> context, ServerPlayerEntity player) {
+        List<net.pneumono.gravestones.GravestoneHistoryEntry> history = Gravestones.getHistory(player.getUuid());
+        
+        if (history.isEmpty()) {
+            context.getSource().sendFeedback(() -> Text.literal("No gravestone history found for " + player.getDisplayName().getString()).formatted(Formatting.YELLOW), false);
+            return 0;
+        }
+        
+        context.getSource().sendFeedback(() -> Text.literal("=== Gravestone History for " + player.getDisplayName().getString() + " ===").formatted(Formatting.GOLD), false);
+        
+        for (int i = 0; i < history.size(); i++) {
+            final int index = i;
+            net.pneumono.gravestones.GravestoneHistoryEntry entry = history.get(i);
+            BlockPos pos = entry.getPosition();
+            String dimension = entry.getDimension().getValue().toString();
+            long timeAgo = System.currentTimeMillis() - entry.getTimestamp();
+            int minutesAgo = (int) (timeAgo / 60000);
+            
+            // Create clickable text that opens the inventory GUI
+            Text message = Text.literal(String.format("[%d] ", index))
+                    .formatted(Formatting.GREEN)
+                    .append(Text.literal("📦 ").formatted(Formatting.YELLOW)
+                            .styled(style -> style
+                                    .withClickEvent(new net.minecraft.text.ClickEvent(
+                                            net.minecraft.text.ClickEvent.Action.RUN_COMMAND,
+                                            "/gravestones history view " + player.getUuidAsString() + " " + index))
+                                    .withHoverEvent(new net.minecraft.text.HoverEvent(
+                                            net.minecraft.text.HoverEvent.Action.SHOW_TEXT,
+                                            Text.literal("Click to view inventory").formatted(Formatting.AQUA)))))
+                    .append(Text.literal(String.format("%s at (%d, %d, %d) - %d minutes ago",
+                            dimension, pos.getX(), pos.getY(), pos.getZ(), minutesAgo))
+                            .formatted(Formatting.GREEN));
+            
+            context.getSource().sendFeedback(() -> message, false);
+        }
+        
+        context.getSource().sendFeedback(() -> Text.literal("Click 📦 to view inventory | Use /gravestones history restore <player> <index> to restore").formatted(Formatting.AQUA), false);
+        
+        return history.size();
+    }
+    
+    private static int restoreFromHistory(CommandContext<ServerCommandSource> context, ServerPlayerEntity player, int index) {
+        net.pneumono.gravestones.GravestoneHistoryEntry entry = Gravestones.getHistoryEntry(player.getUuid(), index);
+        
+        if (entry == null) {
+            context.getSource().sendFeedback(() -> Text.literal("Invalid history index: " + index).formatted(Formatting.RED), false);
+            return 0;
+        }
+        
+        ServerWorld world = context.getSource().getServer().getWorld(entry.getDimension());
+        if (world == null) {
+            context.getSource().sendFeedback(() -> Text.literal("Dimension not found: " + entry.getDimension().getValue()).formatted(Formatting.RED), false);
+            return 0;
+        }
+        
+        BlockPos pos = entry.getPosition();
+        
+        // Place the gravestone block
+        world.setBlockState(pos, GravestonesRegistry.GRAVESTONE_TECHNICAL.getDefaultState());
+        
+        // Set the block entity data
+        if (world.getBlockEntity(pos) instanceof TechnicalGravestoneBlockEntity gravestone) {
+            NbtCompound data = entry.getGravestoneData();
+            gravestone.setContents(data);
+            gravestone.setGraveOwner(new ProfileComponent(player.getGameProfile()));
+            gravestone.setSpawnDate("Restored", world.getTime());
+            
+            world.updateListeners(pos, gravestone.getCachedState(), gravestone.getCachedState(), net.minecraft.block.Block.NOTIFY_LISTENERS);
+            
+            context.getSource().sendFeedback(() -> Text.literal(String.format("Restored gravestone #%d for %s at (%d, %d, %d) in %s",
+                    index, player.getDisplayName().getString(), pos.getX(), pos.getY(), pos.getZ(), entry.getDimension().getValue()))
+                    .formatted(Formatting.GREEN), true);
+            
+            Gravestones.LOGGER.info("Restored gravestone #{} for player {} at {} in {}", 
+                    index, player.getDisplayName().getString(), pos, entry.getDimension().getValue());
+            
+            return 1;
+        }
+        
+        context.getSource().sendFeedback(() -> Text.literal("Failed to restore gravestone - could not create block entity").formatted(Formatting.RED), false);
+        return 0;
     }
 }

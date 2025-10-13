@@ -10,7 +10,6 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.GlobalPos;
 import net.pneumono.gravestones.api.InsertGravestoneItemCallback;
 import net.pneumono.gravestones.compat.AccessoriesCompat;
@@ -21,16 +20,25 @@ import net.pneumono.gravestones.content.GravestonesCommands;
 import net.pneumono.gravestones.content.GravestonesRegistry;
 import net.pneumono.gravestones.events.GravestoneKeyDropHandler;
 import net.pneumono.gravestones.gravestones.GravestoneDataSaving;
+import net.pneumono.gravestones.gravestones.GravestoneManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.util.*;
 import java.util.function.Function;
 
 public class Gravestones implements ModInitializer {
 	public static final String MOD_ID = "gravestones";
 	public static final Function<MinecraftServer, File> GRAVESTONES_ROOT = GravestoneDataSaving::getOrCreateGravestonesFolder;
 	public static final Logger LOGGER = LoggerFactory.getLogger("Gravestones");
+	
+	// Store the most recent gravestone position for each player
+	private static final Map<UUID, GlobalPos> RECENT_GRAVESTONES = new HashMap<>();
+	
+	// Store the last 20 gravestones for each player (for recovery purposes)
+	private static final Map<UUID, LinkedList<GravestoneHistoryEntry>> GRAVESTONE_HISTORY = new HashMap<>();
+	private static final int MAX_HISTORY_SIZE = 20;
 
 	@Override
 	public void onInitialize() {
@@ -82,21 +90,93 @@ public class Gravestones implements ModInitializer {
 		return Identifier.of(MOD_ID, path);
 	}
 	
+	/**
+	 * Register the most recent gravestone position for a player
+	 */
+	public static void setRecentGravestone(UUID playerUuid, GlobalPos gravestonePos) {
+		RECENT_GRAVESTONES.put(playerUuid, gravestonePos);
+		LOGGER.info("[DEBUG] Registered recent gravestone for player {} at {}", playerUuid, gravestonePos);
+	}
+	
+	/**
+	 * Get the most recent gravestone position for a player
+	 */
+	public static GlobalPos getRecentGravestone(UUID playerUuid) {
+		return RECENT_GRAVESTONES.get(playerUuid);
+	}
+	
+	/**
+	 * Add a gravestone to the player's history
+	 * Stores the last 20 gravestones for recovery purposes
+	 */
+	public static void addToHistory(UUID playerUuid, GravestoneHistoryEntry entry) {
+		LinkedList<GravestoneHistoryEntry> history = GRAVESTONE_HISTORY.computeIfAbsent(playerUuid, k -> new LinkedList<>());
+		
+		// Add to the front of the list (most recent first)
+		history.addFirst(entry);
+		
+		// Remove oldest entries if we exceed the limit
+		while (history.size() > MAX_HISTORY_SIZE) {
+			history.removeLast();
+		}
+		
+		LOGGER.info("[HISTORY] Added gravestone to history for player {}. Total entries: {}", playerUuid, history.size());
+	}
+	
+	/**
+	 * Get the gravestone history for a player
+	 */
+	public static List<GravestoneHistoryEntry> getHistory(UUID playerUuid) {
+		return GRAVESTONE_HISTORY.getOrDefault(playerUuid, new LinkedList<>());
+	}
+	
+	/**
+	 * Get a specific gravestone from history by index (0 = most recent)
+	 */
+	public static GravestoneHistoryEntry getHistoryEntry(UUID playerUuid, int index) {
+		List<GravestoneHistoryEntry> history = getHistory(playerUuid);
+		if (index >= 0 && index < history.size()) {
+			return history.get(index);
+		}
+		return null;
+	}
+	
 	private static void giveGravestoneKeyOnRespawn(ServerPlayerEntity player) {
+		// Check if gravestone key should be given
+		if (!GravestonesConfig.GIVE_GRAVESTONE_KEY.getValue()) {
+			return;
+		}
+		
 		try {
-			// Check if player has any gravestones
-			// For now, just give a key unconditionally as a basic implementation
-			ItemStack keyStack = GravestoneKeyItem.createKeyForGravestone(BlockPos.ORIGIN, "minecraft:overworld");
+			// Get the most recent gravestone position for this player
+			GlobalPos recentGravestone = getRecentGravestone(player.getUuid());
 			
-			// Try to add to player inventory, drop if full
-			if (!player.getInventory().insertStack(keyStack)) {
-				player.dropItem(keyStack, false);
+			if (recentGravestone != null) {
+				// Create key with the actual gravestone position
+				ItemStack keyStack = GravestoneKeyItem.createKeyForGravestone(
+					recentGravestone.pos(), 
+					recentGravestone.dimension().getValue().toString()
+				);
+				
+				// Try to add to player inventory, drop if full
+				if (!player.getInventory().insertStack(keyStack)) {
+					player.dropItem(keyStack, false);
+				}
+				
+				// Send messages to player with colored coordinates (cyan like death message)
+				player.sendMessage(Text.translatable("item.gravestones.gravestone_key.received"), false);
+				
+				// Build message: "PlayerName's grave is at (x, y, z)" with cyan coordinates
+				Text message = Text.literal(player.getGameProfile().getName() + "'s grave is at ")
+					.append(Text.literal(GravestoneManager.posToString(recentGravestone.pos()))
+						.styled(style -> style.withColor(0x00FFFF))); // Cyan color
+				
+				player.sendMessage(message, false);
+				
+				LOGGER.info("Gave gravestone key to player {} for gravestone at {}", player.getName().getString(), recentGravestone);
+			} else {
+				LOGGER.info("No recent gravestone found for player {}, not giving key", player.getName().getString());
 			}
-			
-			// Send message to player
-			player.sendMessage(Text.translatable("item.gravestones.gravestone_key.received"), false);
-			
-			LOGGER.info("Gave gravestone key to player {} on respawn", player.getName().getString());
 		} catch (Exception e) {
 			LOGGER.error("Failed to give gravestone key to player {}: {}", player.getName().getString(), e.getMessage());
 		}
