@@ -8,7 +8,7 @@
 
 **Version 2.0.2 for Minecraft 1.21.1**
 
-Soulbound Gravestones is an enhanced version of the original Gravestones mod that adds blocks which store your items on death. This release (2.0.2) es para Minecraft 1.21.1 e incluye todas las mejoras y fixes recientes.
+Soulbound Gravestones is an enhanced version of the original Gravestones mod that adds blocks which store your items on death. This release (2.0.2) has fixed players keeping the key if not used after opening a gravestone.
 
 ### ✨ What's New in Soulbound Gravestones
 
