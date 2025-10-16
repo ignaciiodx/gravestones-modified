@@ -90,7 +90,7 @@ public class TechnicalGravestoneBlock extends AbstractGravestoneBlock {
             );
         }
 
-        // Remove all gravestone keys from the player BEFORE collecting the grave
+    
         net.pneumono.gravestones.gravestones.GravestoneCreation.removeGravestoneKeysFromPlayer(player);
 
         GravestonesApi.onCollect(world, pos, player, gravestone.getDecay(), gravestone.getContents());
