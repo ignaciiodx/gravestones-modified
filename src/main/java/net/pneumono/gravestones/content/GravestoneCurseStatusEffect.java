@@ -13,6 +13,4 @@ public class GravestoneCurseStatusEffect extends StatusEffect {
     }
 
 
-    // Blindness visuals are replicated via client-side mixin in BackgroundRendererMixin
-    // Hunger effect is applied separately in TechnicalGravestoneBlock
 }

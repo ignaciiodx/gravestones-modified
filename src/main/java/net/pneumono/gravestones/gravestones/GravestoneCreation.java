@@ -145,7 +145,7 @@ public class GravestoneCreation extends GravestoneManager {
     /**
      * Removes all gravestone keys from the player's inventory before death to prevent duplicates
      */
-    private static void removeGravestoneKeysFromPlayer(PlayerEntity player) {
+    public static void removeGravestoneKeysFromPlayer(PlayerEntity player) {
         try {
             // Remove keys from main inventory
             for (int i = 0; i < player.getInventory().size(); i++) {

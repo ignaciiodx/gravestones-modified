@@ -155,7 +155,6 @@ public class AccessoriesDataType extends GravestoneDataType {
                     Gravestones.LOGGER.info("[DEBUG] Restored regular accessory: {} to slot {} index {}", newStack.getItem().toString(), primitive.slotName, index);
                 }
             } else {
-                // Slot is occupied, add to remaining items to be dropped
                 remaining.add(newStack);
             }
         }

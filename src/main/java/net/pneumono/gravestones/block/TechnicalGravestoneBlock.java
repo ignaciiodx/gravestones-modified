@@ -90,31 +90,31 @@ public class TechnicalGravestoneBlock extends AbstractGravestoneBlock {
             );
         }
 
+        // Remove all gravestone keys from the player BEFORE collecting the grave
+        net.pneumono.gravestones.gravestones.GravestoneCreation.removeGravestoneKeysFromPlayer(player);
+
         GravestonesApi.onCollect(world, pos, player, gravestone.getDecay(), gravestone.getContents());
         gravestone.setContents(new NbtCompound());
 
-        // Consume 1 hunger bar (1 muslito) if player has enough
+
         if (player.getHungerManager().getFoodLevel() >= 2) {
             player.getHungerManager().add(-2, 0.0F);
         } else {
-            // If player has less than 2, consume what they have
+
             player.getHungerManager().setFoodLevel(0);
         }
         
-        // Reset saturation to 0 when opening gravestone
+
         player.getHungerManager().setSaturationLevel(0.0F);
 
 
 
-        // Clear ALL status effects before applying the curse
         player.clearStatusEffects();
 
-    // Apply all curse effects (5 seconds / 100 ticks)
-    // Hunger V (amplifier 4) para testeo visual
+
     player.addStatusEffect(new StatusEffectInstance(StatusEffects.HUNGER, 200, 4)); // Level 5 (amplifier 4)
-    // Resistencia II (amplifier 1) para pruebas
     player.addStatusEffect(new StatusEffectInstance(StatusEffects.RESISTANCE, 300, 1)); // Level 3 (amplifier 2)
-    // Gravestone Curse - custom effect for visual identification and blindness rendering
+
     player.addStatusEffect(new StatusEffectInstance(GravestonesRegistry.GRAVESTONE_CURSE, 100, 0));
 
         player.incrementStat(GravestonesRegistry.GRAVESTONES_COLLECTED);
